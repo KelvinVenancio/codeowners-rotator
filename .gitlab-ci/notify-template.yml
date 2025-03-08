@@ -1,0 +1,24 @@
+# Template para ser importado em outros projetos
+# É usado como um job de notificação para MRs
+
+.notify-reviewers:
+  stage: notify
+  image: ${CI_REGISTRY_GROUP}/sre/codeowners-rotator:latest
+  script:
+    - /app/scripts/notify-pipeline.sh
+  variables:
+    CONFIG_PATH: /app/config.yaml
+  only:
+    - merge_requests
+  # Por padrão, este job é manual para evitar spam
+  # Remova esta linha se quiser que seja automático
+  when: manual
+
+# Para usar em um projeto, adicione ao .gitlab-ci.yml:
+#
+# include:
+#   - project: 'group/sre/codeowners-rotator'
+#     file: '.gitlab-ci/notify-template.yml'
+#
+# notify:
+#   extends: .notify-reviewers

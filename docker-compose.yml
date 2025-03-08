@@ -1,1 +1,37 @@
-# TODO: Add content
+version: '3'
+
+services:
+  # Service for rotating CODEOWNERS
+  rotate:
+    build: .
+    image: codeowners-rotator:latest
+    volumes:
+      - ./config.yaml:/app/config.yaml
+      - ./rotation_state.json:/app/rotation_state.json
+    environment:
+      - GITLAB_TOKEN=${GITLAB_TOKEN}
+      - SLACK_TOKEN=${SLACK_TOKEN}
+    command: rotate.py --config /app/config.yaml
+
+  # Service for dry run (no changes made)
+  dry-run:
+    image: codeowners-rotator:latest
+    volumes:
+      - ./config.yaml:/app/config.yaml
+      - ./rotation_state.json:/app/rotation_state.json
+    environment:
+      - GITLAB_TOKEN=${GITLAB_TOKEN}
+      - SLACK_TOKEN=${SLACK_TOKEN}
+    command: rotate.py --config /app/config.yaml --dry-run
+
+  # Service for sending notifications
+  notify:
+    image: codeowners-rotator:latest
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    environment:
+      - GITLAB_TOKEN=${GITLAB_TOKEN}
+      - SLACK_TOKEN=${SLACK_TOKEN}
+    command: notify.py --config /app/config.yaml
+    # This is a base service, you'll need to run it with additional arguments:
+    # docker-compose run notify --repo name/repo --mr-id 123 --mr-title "Title" --mr-url "URL" --mr-author "Author"

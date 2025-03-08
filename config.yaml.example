@@ -1,0 +1,34 @@
+# GitLab configuration
+gitlab:
+  url: https://gitlab.com/
+  token: ${GITLAB_TOKEN}
+
+# List of repositories to manage
+repositories:
+  - grupo/projeto1
+  - grupo/projeto2
+
+# List of eligible reviewers
+reviewers:
+  - usuario1
+  - usuario2
+  - usuario3
+  - usuario4
+
+# Number of reviewers to assign in each rotation
+num_reviewers: 2
+
+# Storage options
+storage:
+  type: local
+  state_file: rotation_state.json
+
+# Notification configuration
+notification:
+  slack_token: ${SLACK_TOKEN}
+  fallback_channel: "canal-de-fallback"
+
+  # Mapeamento explícito de usuários GitLab para IDs Slack
+  user_mapping:
+    usuario1: "U01ABC123D"  # ID do Slack do usuário1
+    usuario2: "U02DEF456E"  # ID do Slack do usuário2

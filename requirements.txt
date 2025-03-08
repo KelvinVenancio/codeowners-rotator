@@ -1,1 +1,10 @@
-# TODO: Add content
+# Required dependencies for both rotate.py and notify.py
+python-gitlab>=3.0.0
+pyyaml>=6.0.0
+requests>=2.25.0
+
+# For Slack notifications
+slack-sdk>=3.19.0
+
+# For GCS storage (optional)
+# google-cloud-storage>=2.0.0

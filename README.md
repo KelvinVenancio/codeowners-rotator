@@ -3,185 +3,156 @@
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue)
 ![Version](https://img.shields.io/badge/version-0.1.0--alpha-orange)
 
-**CodeOwners Rotator** é uma ferramenta automatizada para simplificar o gerenciamento de revisores em seus projetos. Ela realiza a rotação automática de CODEOWNERS em múltiplos repositórios e notifica os revisores designados quando novas solicitações de mesclagem são criadas.
+**CodeOwners Rotator** is an automated tool to simplify reviewer management in your projects. It performs automatic rotation of CODEOWNERS across multiple repositories and notifies designated reviewers when new merge requests are created.
 
-## 🚀 Recursos
+## 🚀 Features
 
-- ✅ Rotação automática diária de CODEOWNERS
-- ✅ Suporte para múltiplos repositórios GitLab
-- ✅ Notificações via Slack para revisores designados quando pipelines são executadas
-- ✅ Distribuição justa da carga de revisão
-- ✅ Fácil de configurar e executar via Docker
+- ✅ Automatic daily CODEOWNERS rotation
+- ✅ Support for multiple GitLab repositories
+- ✅ Slack notifications for designated reviewers when merge pipelines are executed
+- ✅ Fair distribution of review load (everyone reviews before repeating)
+- ✅ Automatic detection of default branch in each repository
+- ✅ Containerized for easy deployment
+- ✅ GitLab CI integration for automation
 
-## 🔜 Em Desenvolvimento (Coming Soon)
+## 🔜 In Development (Coming Soon)
 
-- 🚧 Suporte para GitHub
-- 🚧 Suporte para Bitbucket
-- 🚧 Notificações via Microsoft Teams
-- 🚧 Notificações via Email
-- 🚧 Integração com Amazon S3 para armazenamento
-- 🚧 Interface web para visualização e gestão
-- 🚧 Métricas avançadas de desempenho
+- 🚧 Support for GitHub and Bitbucket
+- 🚧 Microsoft Teams notifications
+- 🚧 Integration with Amazon S3 for storage
 
-## 📋 Pré-requisitos
+## 📋 Prerequisites
 
-- Docker e Docker Compose
-- Tokens de acesso GitLab (com permissões de API)
-- Token de API Slack (para notificações)
-- Bucket GCS ou armazenamento local para persistência (opcional)
+- Docker and Docker Compose
+- GitLab access tokens (with API permissions)
+- Slack API token (for notifications)
+- GCS bucket or local storage for persistence (optional)
 
-## 🛠️ Instalação
+## ⚙️ Quick Setup
 
-### Via Docker (Recomendado)
+### 1. Clone this repository
 
 ```bash
-# Baixar a imagem
-docker pull codeowners/rotator:latest
-
-# Preparar arquivo de configuração
-cp config.yaml.example config.yaml
-# Edite config.yaml com suas configurações
-
-# Executar o container
-docker run -v $(pwd)/config.yaml:/app/config.yaml \
-  -e GITLAB_TOKEN=seu_token \
-  -e SLACK_TOKEN=seu_token_slack \
-  codeowners/rotator:latest
-```
-
-### Via Docker Compose
-
-```bash
-# Clone o repositório
-git clone https://github.com/KelvinVenancio/codeowners-rotator.git
+git clone git@github.com:KelvinVenancio/codeowners-rotator.git
 cd codeowners-rotator
-
-# Configure as variáveis de ambiente
-cp .env.example .env
-# Edite .env com suas credenciais
-
-# Inicie com Docker Compose
-docker-compose up -d
 ```
 
-## ⚙️ Configuração
-
-Crie um arquivo `config.yaml` com a seguinte estrutura:
+### 2. Configure the config.yaml file
 
 ```yaml
-# Configuração de plataforma
-platform:
-  type: gitlab  # ou github, bitbucket
-  url: https://gitlab.example.com/
-  token: ${GITLAB_TOKEN}  # Use variável de ambiente ou coloque diretamente
+# GitLab configuration
+gitlab:
+  url: https://gitlab.com/
+  token: ${GITLAB_TOKEN}
 
-# Repositórios para gerenciar
+# List of repositories to manage
 repositories:
-  - namespace/repo1
-  - namespace/repo2
-  - namespace/repo3
+  - group/project1
+  - group/project2
 
-# Lista de revisores elegíveis
+# List of eligible reviewers
 reviewers:
-  - username1
-  - username2
-  - username3
-  - username4
+  - user1
+  - user2
+  - user3
+  - user4
 
-# Configuração de notificação
-notification:
-  type: slack  # (teams e email - coming soon)
-  token: ${SLACK_TOKEN}
-  
-# Configuração de armazenamento
+# Number of reviewers to assign in each rotation
+num_reviewers: 2
+
+# Storage options
 storage:
-  type: gcs  # ou local (s3 - coming soon)
-  bucket: my-rotation-bucket
-  prefix: codeowners/
+  type: local
+  state_file: rotation_state.json
+
+# Notification configuration
+notification:
+  slack_token: ${SLACK_TOKEN}
+  fallback_channel: "fallback-channel"
+
+  # Explicit mapping of GitLab users to Slack IDs
+  user_mapping:
+    user1: "U01ABC123D"  # Slack ID for user1
+    user2: "U02DEF456E"  # Slack ID for user2
+    user3: "U01ABC678D"  # Slack ID for user3
+    user4: "U02DE5426E"  # Slack ID for user4
 ```
 
-## 🔄 Uso
-
-### Execução Manual
+### 3. Run with Docker
 
 ```bash
-# Rotação imediata de CODEOWNERS
-docker run codeowners/rotator --rotate-now
+# Export tokens as environment variables
+export GITLAB_TOKEN=your_gitlab_token
+export SLACK_TOKEN=your_slack_token
 
-# Verificar configuração
-docker run codeowners/rotator --check-config
+# Run rotation
+docker-compose run rotate
 
-# Testar notificações
-docker run codeowners/rotator --test-notification
+# Simulation (without changes)
+docker-compose run dry-run
 ```
 
-### Uso para Notificações em Pipelines
+## 🔄 Usage
 
-Para notificar os revisores quando uma MR precisa de aprovação, adicione o seguinte stage à sua pipeline:
+### Manual CODEOWNERS Rotation
+
+```bash
+python rotate.py --config config.yaml
+```
+
+### Sending Notifications
+
+```bash
+python notify.py --config config.yaml \
+  --repo group/project \
+  --mr-id 123 \
+  --mr-title "Implement feature X" \
+  --mr-url "https://gitlab.com/group/project/-/merge_requests/123" \
+  --mr-author "developer"
+```
+
+### Usage for Pipeline Notifications
+
+To notify reviewers when a MR needs approval, add the following stage to your pipeline:
 
 ```yaml
-notify-reviewers:
-  stage: notify
-  image: codeowners/rotator:latest
-  script:
-    - /app/notify.sh
-  variables:
-    SLACK_TOKEN: ${SLACK_TOKEN}
-  only:
-    - merge_requests
+include:
+  - project: 'group/codeowners-rotator'
+    file: '.gitlab-ci/notify-template.yml'
+
+notify:
+  extends: .notify-reviewers
 ```
 
-Este step lerá o arquivo CODEOWNERS atual e enviará notificações diretamente aos revisores designados via Slack quando a pipeline for executada, sem interferir no processo de rotação diária.
+This step will read the current CODEOWNERS file and send notifications directly to designated reviewers via Slack when the pipeline is executed.
 
-### Configuração via GitLab CI
+## 📝 How to Obtain Slack IDs
 
-Exemplo de arquivo `.gitlab-ci.yml` para rotação diária:
+To fill out the `user_mapping` in the configuration:
 
-```yaml
-codeowners-rotation:
-  image: codeowners/rotator:latest
-  script:
-    - /app/run.sh --rotate
-  variables:
-    GITLAB_TOKEN: ${CI_TOKEN}
-    SLACK_TOKEN: ${SLACK_TOKEN}
-  only:
-    - schedules
-```
+1. In Slack, click on the user's profile
+2. Select "View profile"
+3. Click on the three dots (⋮)
+4. Select "Copy Member ID"
 
-## 🧩 Extensões
+## 🔍 Troubleshooting
 
-O sistema é modular e pode ser estendido através de adaptadores para:
+### Common Errors
 
-- **Plataformas**: GitLab, GitHub, Bitbucket
-- **Armazenamento**: GCS, S3, local
-- **Notificação**: Slack, Teams, Email
+- **GitLab Authentication Error**: Verify that the token has correct permissions
+- **Slack Authentication Error**: Ensure the bot has been added to the channels
+- **CODEOWNERS Not Found**: Check paths and default branches
 
-Consulte a [documentação de plugins](docs/plugins.md) para mais informações.
+### Required Permissions
 
-## 📊 Métricas e Monitoramento
+- GitLab Token: api, read_repository, write_repository
+- Slack Token: chat:write, im:write, users:read
 
-O CodeOwners Rotator expõe métricas Prometheus na porta 9090 por padrão, incluindo:
-- Tempo de execução de rotação
-- Sucesso/falha de atualizações de CODEOWNERS
-- Notificações enviadas
+## 📄 License
 
-## 📚 Documentação
+This project is licensed under the [Apache License 2.0](LICENSE).
 
-- [Guia de Configuração Avançada](docs/advanced-config.md)
-- [Arquitetura](docs/architecture.md)
-- [FAQ](docs/faq.md)
-- [Solução de Problemas](docs/troubleshooting.md)
+## 🙏 Acknowledgments
 
-## 🤝 Contribuindo
-
-Contribuições são bem-vindas! Por favor, consulte [CONTRIBUTING.md](CONTRIBUTING.md) para obter detalhes.
-
-## 📄 Licença
-
-Este projeto está licenciado sob a [Apache License 2.0](LICENSE).
-
-## 🙏 Agradecimentos
-
-- Meu time de SRE que inspirou a criação desta ferramenta
-- Comunidade open source
+- My colleagues from my SRE team
+- Open source community
